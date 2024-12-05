@@ -1,0 +1,53 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <name>My Android_Studio_Plugin</name>
+    <actions>
+        <action class="org.jetbrains.plugins.template.action.MyAction"
+            description="This is my first plugin action" id="MyAction" text="Run My Action">
+            <!--            编辑器：EditorPopupMenu, EditorTabsPopupMenu, EditorContextMenu-->
+            <!--            项目视图：ProjectViewPopupMenu, FilePopupMenu, ProjectPopupMenu-->
+            <!--            版本控制：VcsPopupMenu, GitPopupMenu-->
+            <!--            主菜单：MainMenu-->
+            <!--            工具栏：MainToolbar-->
+            <!--            其他：RunPopupMenu, ToolWindowPopupMenu, NavigatePopupMenu-->
+
+            <!--            first：将 Action 插入到组的最前面。-->
+            <!--            last：将 Action 插入到组的最后面。-->
+            <!--            before 和 after：将 Action 插入到另一个指定 Action 前面或后面。-->
+            <add-to-group anchor="last" group-id="EditorPopupMenu" />
+        </action>
+
+        <action id="CreateFragmentFileAction"
+            class="org.jetbrains.plugins.template.action.FragmentCreateFileAction"
+            text="CreateFragment"
+            description="Create a new Kotlin Fragment file">
+            <!-- 将 Action 添加到文件夹右键菜单 -->
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="first"/>
+        </action>
+    </actions>
+    <applicationListeners>
+        <listener class="org.jetbrains.plugins.template.listeners.MyApplicationActivationListener"
+            topic="com.intellij.openapi.application.ApplicationActivationListener" />
+    </applicationListeners>
+    <depends>com.intellij.modules.platform</depends>
+    <description>My first_Android_Studio_Plugin 666666666666666666666666666666666666</description>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- 插件扩展点 -->
+        <!--        显示弹窗-->
+        <toolWindow anchor="left"
+            factoryClass="org.jetbrains.plugins.template.toolWindow.MyToolWindowFactory"
+            id="MyToolWindow" />
+    </extensions>
+
+    <id>com.example.myplugin</id>
+
+    <resource-bundle>messages.MyBundle</resource-bundle>
+
+    <vendor>Emoji</vendor>
+
+    <!--    <idea-version since-build="203.1234" until-build="203.1999" />-->
+
+    <version>1.0</version>
+
+</idea-plugin>
