@@ -42,28 +42,17 @@ class CreateViewModelFile {
         // 自动生成一个简单的 Fragment 代码模板
         val nameWithoutSuffix = fileName.removeSuffix(".kt")
         var packageName = "com.example"
-        var applicationId = "com.example"
 
         // 获取当前文件夹的路径
         val filePath = folder.path
         CustomFileLogger.getInstance().logInfo("filePath = ${filePath}")
-        val sourceDirectory = getSourceDirectory(project, filePath, folder)
-        CustomFileLogger.getInstance().logInfo("sourceDirectory = ${sourceDirectory}")
-        if (filePath.startsWith(sourceDirectory)) {
-            println("The file is outside the source directory.")
-            // 从文件路径推断包名
-            packageName = getPackageNameFromFilePath(filePath, sourceDirectory)
-        }
-
-
-        // 假设你正在获取应用模块的 build.gradle 文件
-        val buildGradleFile = findBuildGradleFile(project, folder)
-
-        if (buildGradleFile != null) {
-            applicationId = getApplicationIdFromBuildGradle(buildGradleFile).toString()
-            CustomFileLogger.getInstance().logInfo("The applicationId (package name) is: $applicationId")
-        } else {
-            CustomFileLogger.getInstance().logInfo("Couldn't find build.gradle file.")
+        getSourceDirectory(project, filePath, folder)?.let {
+            CustomFileLogger.getInstance().logInfo("sourceDirectory = ${it}")
+            if (filePath.startsWith(it)) {
+                println("The file is outside the source directory.")
+                // 从文件路径推断包名
+                packageName = getPackageNameFromFilePath(filePath, it)
+            }
         }
 
         return """

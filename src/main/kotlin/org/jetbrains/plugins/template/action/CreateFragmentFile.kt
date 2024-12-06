@@ -1,5 +1,6 @@
 package org.jetbrains.plugins.template.action
 
+import com.fasterxml.aalto.util.TextUtil
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileTypes.FileTypes
@@ -9,10 +10,13 @@ import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.PsiManager
+import org.apache.http.util.TextUtils
 import org.jetbrains.plugins.template.CustomFileLogger
 import org.jetbrains.plugins.template.Utils.findBuildGradleFile
 import org.jetbrains.plugins.template.Utils.getApplicationIdFromBuildGradle
+import org.jetbrains.plugins.template.Utils.getNamespaceFromGradle
 import org.jetbrains.plugins.template.Utils.getPackageNameFromFilePath
+import org.jetbrains.plugins.template.Utils.getPackageNameFromManifest
 import org.jetbrains.plugins.template.Utils.getSourceDirectory
 
 class CreateFragmentFile {
@@ -46,15 +50,16 @@ class CreateFragmentFile {
         val viewmodel = nameWithoutSuffix+"ViewModel"
         var packageName = "com.example"
         var applicationId = "com.example"
+        var applicationPackageName = ""
 
         // 获取当前文件夹的路径
         val filePath = folder.path
-        val sourceDirectory = getSourceDirectory(project, filePath, folder)
-
-        if (filePath.startsWith(sourceDirectory)) {
-            CustomFileLogger.getInstance().logInfo("The file is outside the source directory.")
-            // 从文件路径推断包名
-            packageName = getPackageNameFromFilePath(filePath, sourceDirectory)
+        getSourceDirectory(project, filePath, folder)?.let {
+            if (filePath.startsWith(it)) {
+                CustomFileLogger.getInstance().logInfo("The file is outside the source directory.")
+                // 从文件路径推断包名
+                packageName = getPackageNameFromFilePath(filePath, it)
+            }
         }
 
         // 假设你正在获取应用模块的 build.gradle 文件
@@ -67,6 +72,25 @@ class CreateFragmentFile {
             CustomFileLogger.getInstance().logInfo("Couldn't find build.gradle file.")
         }
 
+        // 从Manifest中获取
+        getPackageNameFromManifest(project, folder)?.let {
+            applicationPackageName = it
+        }
+        CustomFileLogger.getInstance().logInfo("getPackageNameFromManifest: $applicationPackageName")
+        // 从Manifest中获取不到，获取build.gradle中的namespace
+        if (TextUtils.isEmpty(applicationPackageName)) {
+            getNamespaceFromGradle(project, folder)?.let {
+                applicationPackageName = it
+            }
+            CustomFileLogger.getInstance().logInfo("getNamespaceFromGradle: $applicationPackageName")
+        }
+        if (TextUtils.isEmpty(applicationPackageName)) {
+            CustomFileLogger.getInstance().logInfo("Couldn't find application PackageName.")
+            applicationPackageName = "com.example"
+        } else {
+            CustomFileLogger.getInstance().logInfo("The application PackageName is: $applicationPackageName")
+        }
+
         return """
             package $packageName
 
@@ -76,7 +100,7 @@ class CreateFragmentFile {
             import android.view.ViewGroup
             import androidx.fragment.app.Fragment
             import androidx.lifecycle.ViewModelProvider
-            import $applicationId.databinding.$binding
+            import $applicationPackageName.databinding.$binding
 
             class $fragmentName : Fragment() {
 

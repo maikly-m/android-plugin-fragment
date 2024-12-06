@@ -11,8 +11,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.PsiManager
 import org.jetbrains.plugins.template.CustomFileLogger
-import org.jetbrains.plugins.template.Utils.getModuleNameFromFile
-import java.io.File
+import org.jetbrains.plugins.template.Utils.findAppFileRelativePath
 import java.nio.file.Paths
 
 class CreateLayoutXmlFile {
@@ -29,27 +28,22 @@ class CreateLayoutXmlFile {
 
         // 获取项目的根路径
         val projectBasePath = project.basePath ?: return
-        projectBasePath.split(File.separatorChar).let {
-            it[it.lastIndex].run {
-                val removeSuffix = projectBasePath.removeSuffix(this)
-                val moduleName = getModuleNameFromFile(project, folder)
+        findAppFileRelativePath(project, folder)?.let {
+            val resourcesPath = Paths.get(projectBasePath, it, "src", "main", "res")
+            val layoutPath = resourcesPath.resolve("layout")
+            CustomFileLogger.getInstance().logInfo("resourcesPath: ${resourcesPath}")
 
-                val resourcesPath = Paths.get(removeSuffix, moduleName, "src", "main", "res")
-                val layoutPath = resourcesPath.resolve("layout")
-                CustomFileLogger.getInstance().logInfo("resourcesPath: ${resourcesPath}")
-
-                // 获取 resources 目录和 layout 子目录
-                val resourcesDir = LocalFileSystem.getInstance().findFileByPath(resourcesPath.toString())
-                val layoutDir = resourcesDir?.findChild("layout")
-                CustomFileLogger.getInstance().logInfo("layoutDir: ${layoutDir?.path}")
-                // 如果 layout 文件夹不存在，创建它
-                if (layoutDir == null) {
-                    resourcesDir?.createChildDirectory(this, "layout")?.run {
-                        createXmlFile(project, this, layoutName)
-                    }
-                } else {
-                    createXmlFile(project, layoutDir, layoutName)
+            // 获取 resources 目录和 layout 子目录
+            val resourcesDir = LocalFileSystem.getInstance().findFileByPath(resourcesPath.toString())
+            val layoutDir = resourcesDir?.findChild("layout")
+            CustomFileLogger.getInstance().logInfo("layoutDir: ${layoutDir?.path}")
+            // 如果 layout 文件夹不存在，创建它
+            if (layoutDir == null) {
+                resourcesDir?.createChildDirectory(this, "layout")?.run {
+                    createXmlFile(project, this, layoutName)
                 }
+            } else {
+                createXmlFile(project, layoutDir, layoutName)
             }
         }
     }
