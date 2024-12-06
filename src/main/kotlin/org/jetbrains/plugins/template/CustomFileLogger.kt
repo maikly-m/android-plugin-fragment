@@ -20,7 +20,7 @@ class CustomFileLogger {
     }
 
     private val logger: Logger = Logger.getLogger(CustomFileLogger::class.java.name)
-    private val logOn = false
+    private val logOn = true
 
     init {
         try {

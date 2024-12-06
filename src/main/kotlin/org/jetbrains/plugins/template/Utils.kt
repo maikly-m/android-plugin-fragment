@@ -1,5 +1,6 @@
 package org.jetbrains.plugins.template
 
+import com.intellij.ide.startup.importSettings.providers.vswin.utilities.VSHive.Companion.regex
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.module.ModuleUtil
@@ -216,18 +217,26 @@ object Utils {
         return null
     }
 
-    fun getNamespaceFromGradle(project: Project, virtualFile: VirtualFile): String? {
-        findBuildGradleFile(project, virtualFile)?.let {
+    fun getNamespaceFromGradle(project: Project, file: VirtualFile): String? {
+        findBuildGradleFile(project, file)?.let {
             // 创建 PsiFile 来解析 Gradle 文件内容
             val psiFile: PsiFile = PsiFileFactory.getInstance(project)
-                .createFileFromText(virtualFile.name, virtualFile.path)
+                .createFileFromText(it.name,  inputStreamToString(it.inputStream))
             CustomFileLogger.getInstance()
-                .logInfo("getNamespaceFromGradle virtualFile.name=${virtualFile.name}")
+                .logInfo("getNamespaceFromGradle virtualFile.name=${it.name}")
             CustomFileLogger.getInstance()
-                .logInfo("getNamespaceFromGradle virtualFile.path=${virtualFile.path}")
+                .logInfo("getNamespaceFromGradle virtualFile.path=${it.path}")
             // 获取文件内容并查找 namespace 配置项
             val content = psiFile.text ?: return null
-            val regex = "namespace\\s+\"([^\"]+)\"".toRegex()
+            // 使用正则表达式解析 namespace
+            val regex : Regex?
+            if (it.name == "build.gradle") {
+                //gradle
+                regex = "namespace\\s*\"([^\"]+)\"".toRegex()
+            } else {
+                // kts
+                regex = "namespace\\s*=\\s*\"([^\"]+)\"".toRegex()
+            }
             val r = regex.find(content)?.groups?.get(1)?.value
             CustomFileLogger.getInstance()
                 .logInfo("getPackageNameFromManifest result=${r}")
